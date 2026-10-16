@@ -1,4 +1,4 @@
-name: Deploy public site
+name: Validate public site
 
 on:
   push:
@@ -23,19 +23,3 @@ jobs:
       - uses: actions/checkout@v4
       - run: bash -n scripts/deploy-public.sh
       - run: test -s public/index.html && test -s public/style.css && test -s public/app.js
-
-  deploy:
-    needs: test
-    if: github.ref == 'refs/heads/main'
-    runs-on: [self-hosted, linux, x64, host, kspls0, palworld]
-    environment: production
-    steps:
-      - uses: actions/checkout@v4
-      - name: Publish static assets atomically
-        env:
-          PALWORLD_PUBLIC_DIR: /srv/static/palworld
-        run: ./scripts/deploy-public.sh
-      - name: Verify deployed content
-        run: |
-          test -s /srv/static/palworld/index.html
-          grep -q 'id="mods-title">Recommended mods' /srv/static/palworld/index.html

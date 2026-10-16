@@ -493,10 +493,15 @@ handle_path /palworld/* {
 }
 ```
 
-Changes under `public/` are also deployed from `main` by
-`.github/workflows/deploy-public.yml`. The repository-scoped `kspls0` runner
-publishes atomically with `scripts/deploy-public.sh` and preserves the current
-`status.json` while replacing versioned assets.
+Changes under `public/` are validated by GitHub Actions. Publish them manually
+from a checkout on the host that serves the public site:
+
+```bash
+PALWORLD_PUBLIC_DIR=/srv/static/palworld ./scripts/deploy-public.sh
+```
+
+The script publishes atomically and preserves the current `status.json` while
+replacing versioned assets.
 
 The map and location dataset come from
 [ARXII-13/Palworld-Interactive-Map](https://github.com/ARXII-13/Palworld-Interactive-Map).
