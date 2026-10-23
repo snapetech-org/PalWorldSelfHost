@@ -69,8 +69,6 @@ class PortabilityTests(unittest.TestCase):
             package, settings, marker, env = self.fixture(root)
             process = subprocess.Popen(["sh", str(ENTRYPOINT), "-port=8211"], env=env)
             deadline = time.monotonic() + 5
-            # "ready" only means the entrypoint spawned the server. Wait for the server to
-            # install its INT trap too, or SIGTERM can land before it can shut down gracefully.
             while not ((root / "ready").exists() and (root / "server.started").exists()) and time.monotonic() < deadline:
                 time.sleep(0.02)
             self.assertTrue((root / "ready").exists())
