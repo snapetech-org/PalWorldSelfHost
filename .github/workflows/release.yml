@@ -1,10 +1,11 @@
+# ng-runner-policy: private-jit-only-v1
 name: Release archive
 on:
   push: {tags: ['v*']}
 permissions: {contents: write}
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(format('{{"group":"ng-shared-main-jit","labels":["self-hosted","linux","x64","ng-shared-main-palworldselfhost","ng-main-run-{0}","gha-{0}-release"]}}', github.run_id)) }}
     steps:
       - uses: actions/checkout@v4
       - run: tar --exclude=.git -czf PalWorldSelfHost-${GITHUB_REF_NAME}.tar.gz .
