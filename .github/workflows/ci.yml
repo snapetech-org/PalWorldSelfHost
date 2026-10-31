@@ -1,9 +1,25 @@
 # ng-runner-policy: private-jit-only-v1
 name: CI
-on: [push, pull_request]
+on:
+  pull_request:
+    types: [labeled]
 permissions: {contents: read}
 jobs:
   test:
+    if: >-
+      (
+        (
+        github.event_name == 'pull_request' &&
+        github.event.action == 'labeled' &&
+        (github.event.label.name == 'action:ci' || github.event.label.name == 'pool:private') &&
+        contains(github.event.pull_request.labels.*.name, 'action:ci') &&
+        contains(github.event.pull_request.labels.*.name, 'pool:private') &&
+        github.event.pull_request.head.repo.full_name == github.repository
+        )
+      ) &&
+      (
+        true
+      )
     runs-on: ${{ fromJSON(format('{{"group":"ng-shared-main-jit","labels":["self-hosted","linux","x64","ng-shared-main-palworldselfhost","ng-main-run-{0}","gha-{0}-test"]}}', github.run_id)) }}
     steps:
       - uses: actions/checkout@v4
@@ -12,12 +28,40 @@ jobs:
       - run: node --check admin/static/app.js bootstrap/static/bootstrap.js
       - run: python3 -m unittest discover -s tests -v
   shellcheck:
+    if: >-
+      (
+        (
+        github.event_name == 'pull_request' &&
+        github.event.action == 'labeled' &&
+        (github.event.label.name == 'action:ci' || github.event.label.name == 'pool:private') &&
+        contains(github.event.pull_request.labels.*.name, 'action:ci') &&
+        contains(github.event.pull_request.labels.*.name, 'pool:private') &&
+        github.event.pull_request.head.repo.full_name == github.repository
+        )
+      ) &&
+      (
+        true
+      )
     runs-on: ${{ fromJSON(format('{{"group":"ng-shared-main-jit","labels":["self-hosted","linux","x64","ng-shared-main-palworldselfhost","ng-main-run-{0}","gha-{0}-shellcheck"]}}', github.run_id)) }}
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y shellcheck
       - run: shellcheck -x -e SC1091 scripts/*.sh scripts/palworldctl deploy/container/entrypoint.sh deploy/arm64/preflight.sh
   arm64-emulation:
+    if: >-
+      (
+        (
+        github.event_name == 'pull_request' &&
+        github.event.action == 'labeled' &&
+        (github.event.label.name == 'action:ci' || github.event.label.name == 'pool:private') &&
+        contains(github.event.pull_request.labels.*.name, 'action:ci') &&
+        contains(github.event.pull_request.labels.*.name, 'pool:private') &&
+        github.event.pull_request.head.repo.full_name == github.repository
+        )
+      ) &&
+      (
+        true
+      )
     runs-on: ${{ fromJSON(format('{{"group":"ng-shared-main-jit","labels":["self-hosted","linux","arm64","ng-shared-main-palworldselfhost","ng-main-run-{0}","gha-{0}-arm64-emulation"]}}', github.run_id)) }}
     timeout-minutes: 15
     steps:
