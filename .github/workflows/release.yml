@@ -1,13 +1,50 @@
 # ng-runner-policy: private-jit-only-v1
 name: Release archive
+
+run-name: >-
+  ${{ format('action:{0}:pool:{1}:tag:{2}', inputs.action, inputs.runner_pool, inputs.release_tag) }}
 on:
-  push: {tags: ['v*']}
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Release action
+        type: choice
+        options: [release]
+        required: true
+      runner_pool:
+        description: Private ephemeral JIT runner pool
+        type: choice
+        options: [private]
+        required: true
+      release_tag:
+        description: Exact existing version tag to publish
+        type: string
+        required: true
 permissions: {contents: write}
 jobs:
   release:
+    if: ${{ github.ref == 'refs/heads/main' && github.actor == 'snapetech' && inputs.action == 'release' && inputs.runner_pool == 'private' && inputs.release_tag != '' }}
     runs-on: ${{ fromJSON(format('{{"group":"ng-shared-main-jit","labels":["self-hosted","linux","x64","ng-shared-main-palworldselfhost","ng-main-run-{0}","gha-{0}-release"]}}', github.run_id)) }}
+    env:
+      RELEASE_TAG: ${{ inputs.release_tag }}
     steps:
       - uses: actions/checkout@v4
-      - run: tar --exclude=.git -czf PalWorldSelfHost-${GITHUB_REF_NAME}.tar.gz .
+        with:
+          ref: ${{ inputs.release_tag }}
+          fetch-depth: 0
+      - name: Verify release tag
+        run: |
+          git merge-base --is-ancestor "${{ inputs.release_tag }}^{commit}" origin/main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse '${{ inputs.release_tag }}^{commit}')"
+      - name: Verify release tag
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v([0-9]+\.[0-9]+(\.[0-9]+)?)$ ]]
+          git merge-base --is-ancestor "$RELEASE_TAG^{commit}" origin/main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse "$RELEASE_TAG^{commit}")"
+      - name: Build release archive
+        run: tar --exclude=.git -czf "PalWorldSelfHost-${RELEASE_TAG}.tar.gz" .
       - uses: softprops/action-gh-release@v2
-        with: {files: 'PalWorldSelfHost-*.tar.gz', generate_release_notes: true}
+        with:
+          tag_name: ${{ inputs.release_tag }}
+          files: 'PalWorldSelfHost-*.tar.gz'
+          generate_release_notes: true
